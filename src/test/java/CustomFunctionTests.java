@@ -1,10 +1,10 @@
-import com.glilienfield.CustomFunctions;
+import customFunctions.CustomFunctions;
 import org.junit.jupiter.api.*;
 import org.neo4j.driver.*;
 import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilders;
 
-class CustomFunctionsTest {
+class CustomFunctionTests {
 
     static Driver driver;
 
@@ -69,7 +69,7 @@ class CustomFunctionsTest {
     @Test
     @DisplayName("a and b have lists of integers with multiple common element")
     void test_a_and_b_have_lists_with_multiple_common_element() {
-        String cypher = "create (a{id: 1, list_intern: ['10','2', '100']}), (b{id: 2, list_extern: ['100','1','2']})";
+        String cypher = "create (a{id: 1, list_intern: ['10','2','100']}), (b{id: 2, list_extern: ['100','1','2']})";
         boolean isSimilar = executeTest(cypher);
         Assertions.assertTrue(isSimilar);
     }
@@ -91,7 +91,7 @@ class CustomFunctionsTest {
     }
 
     @Test
-    @DisplayName("a has a single element and b has the single element in b")
+    @DisplayName("a has a single element and b has the single element equal to b")
     void test_a_has_a_single_element_and_b_has_the_single_element_of_b() {
         String cypher = "create (a{id: 1, list_intern: '2'}), (b{id: 2, list_extern: '2'})";
         boolean isSimilar = executeTest(cypher);
@@ -109,7 +109,7 @@ class CustomFunctionsTest {
     private boolean executeTest(String setupCypher) {
         try (Session session = driver.session()) {
             session.run(setupCypher);
-            Result result = session.run("match (a{id: 1}), (b{id: 2}) return com.glilienfield.isSimilar('list_intern', a, 'list_extern', b) as result");
+            Result result = session.run("match (a{id: 1}), (b{id: 2}) return customFunctions.isSimilar('list_intern', a, 'list_extern', b) as result");
             if (result.hasNext()) {
                 Record record = result.next();
                 return record.get("result").asBoolean();

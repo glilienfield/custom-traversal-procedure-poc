@@ -1,4 +1,4 @@
-package com.glilienfield;
+package customFunctions;
 
 import org.neo4j.graphdb.Node;
 import org.neo4j.procedure.Description;
@@ -11,7 +11,7 @@ import java.util.List;
 public class CustomFunctions {
 
     @UserFunction()
-    @Description("Calculate the similarity between two nodes by verifying list of strings has at least on element in common")
+    @Description("Calculate the similarity between two nodes by verifying list of strings have at least on element in common")
     public boolean isSimilar(@Name("aProp") String aProp, @Name("a") Node a, @Name("bProp") String bProp, @Name("b") Node b) {
 
         if(!a.hasProperty(aProp) || !b.hasProperty(bProp)) {
