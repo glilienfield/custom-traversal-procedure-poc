@@ -7,12 +7,18 @@ import org.neo4j.procedure.UserFunction;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class CustomFunctions {
 
     @UserFunction()
     @Description("Calculate the similarity between two nodes by verifying list of strings have at least on element in common")
     public boolean isSimilar(@Name("aProp") String aProp, @Name("a") Node a, @Name("bProp") String bProp, @Name("b") Node b) {
+
+        Objects.requireNonNull(aProp);
+        Objects.requireNonNull(a);
+        Objects.requireNonNull(bProp);
+        Objects.requireNonNull(b);
 
         if(!a.hasProperty(aProp) || !b.hasProperty(bProp)) {
             return false;

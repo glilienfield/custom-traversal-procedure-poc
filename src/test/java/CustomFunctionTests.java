@@ -27,6 +27,42 @@ class CustomFunctionTests {
     }
 
     @Test
+    @DisplayName("aProp is null, ClientException is thrown")
+    void test_null_aProp_value_results_in_neo4j_client_exception() {
+        Assertions.assertThrows(org.neo4j.driver.exceptions.ClientException.class, ()->{
+            String cypher = "create (b{id: 2}) return customFunctions.isSimilar('list_intern', null, 'list_extern', b) as result";
+            boolean isSimilar = executeTest(cypher);
+        });
+    }
+
+    @Test
+    @DisplayName("bProp is null, Neo4j ClientException is thrown")
+    void test_null_bProp_value_results_in_neo4j_client_exception() {
+        Assertions.assertThrows(org.neo4j.driver.exceptions.ClientException.class, ()->{
+            String cypher = "create (a{id: 1}) return customFunctions.isSimilar('list_intern', a, 'list_extern', null) as result";
+            boolean isSimilar = executeTest(cypher);
+        });
+    }
+
+    @Test
+    @DisplayName("a is null, ClientException is thrown")
+    void test_null_a_value_results_in_neo4j_client_exception() {
+        Assertions.assertThrows(org.neo4j.driver.exceptions.ClientException.class, ()->{
+            String cypher = "create (a{id: 1}), (b{id: 2}) return customFunctions.isSimilar(null, a, 'list_extern', b) as result";
+            boolean isSimilar = executeTest(cypher);
+        });
+    }
+
+    @Test
+    @DisplayName("b is null, ClientException is thrown")
+    void test_null_b_value_results_in_neo4j_client_exception() {
+        Assertions.assertThrows(org.neo4j.driver.exceptions.ClientException.class, ()->{
+            String cypher = "create (a{id: 1}), (b{id: 2}) return customFunctions.isSimilar('list_intern', a, null, b) as result";
+            boolean isSimilar = executeTest(cypher);
+        });
+    }
+
+    @Test
     @DisplayName("a has null list, b has null list")
     void test_both_nodes_have_null_lists() {
         String cypher = "create (a{id: 1}), (b{id: 2})";
@@ -117,5 +153,15 @@ class CustomFunctionTests {
                 throw new IllegalArgumentException();
             }
         }
+    }
+
+    private boolean executeCypher(String cypher) {
+        boolean hasResult;
+        try (Session session = driver.session()) {
+            session.run(cypher);
+            Result result = session.run(cypher);
+            hasResult = result.hasNext();
+        }
+        return hasResult;
     }
 }
