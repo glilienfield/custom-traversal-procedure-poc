@@ -95,12 +95,13 @@ class AdvancedCustomProcedureTest {
             Record result = getCypherResults(cypher);
             List<Rel> rel = getResult(result);
 
+            Assertions.assertEquals(2, rel.size());
             Assertions.assertEquals(rel.get(0), Rel.of("A", "X", "BLACK_LIST"));
             Assertions.assertEquals(rel.get(1), Rel.of("X", "DS", "RELATION"));
         }
 
         @Test
-        void test_with_max_depth_equal_to_0_should_return_empty_list_and_map() {
+        void test_with_max_depth_equal_to_zero_should_return_empty_list_and_map() {
             String cypher = "match (a:External {name: 'A'}) " +
                     "match (ds:Node {name:'DS'}) " +
                     "call custom.advancedTraverseGraph(a, ds, 'sens_value', {maxDepth: 0}) yield relationships, nodes " +
@@ -115,9 +116,9 @@ class AdvancedCustomProcedureTest {
         }
     }
 
-    @DisplayName("Test White List Scenarios")
+    @DisplayName("Test Node White List Scenarios")
     @Nested
-    class TestWhiteListScenarios {
+    class TestNodeWhiteListScenarios {
         @Test
         void test_with_white_list_as_single_value_of_Node() {
             String cypher = "match (a:External {name: 'A'}) " +
@@ -136,18 +137,267 @@ class AdvancedCustomProcedureTest {
         }
 
         @Test
-        void test_with_max_depth_equal_to_0_should_return_empty_list_and_map() {
+        void test_with_white_list_as_a_list_with_Node_Label() {
             String cypher = "match (a:External {name: 'A'}) " +
                     "match (ds:Node {name:'DS'}) " +
-                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {maxDepth: 0}) yield relationships, nodes " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {nodes: {whiteList: ['Node', 'Other']}}) yield relationships, nodes " +
                     "return relationships, nodes ";
 
             Record result = getCypherResults(cypher);
-            Map<String, Node> nodes = getNodeMap(result);
-            List<Relationship> relationships = getRelationshipList(result);
+            List<Rel> rel = getResult(result);
 
-            Assertions.assertEquals(0, nodes.size());
-            Assertions.assertEquals(0, relationships.size());
+            Assertions.assertEquals(4, rel.size());
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "B", "RELATION"));
+            Assertions.assertEquals(rel.get(1), Rel.of("B", "G", "RELATION"));
+            Assertions.assertEquals(rel.get(2), Rel.of("G", "H", "RELATION"));
+            Assertions.assertEquals(rel.get(3), Rel.of("H", "DS", "RELATION"));
+        }
+    }
+
+    @DisplayName("Test Node Black List Scenarios")
+    @Nested
+    class TestNodeBlackListScenarios {
+        @Test
+        void test_with_black_list_as_a_single_value_of_Node() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {nodes: {blackList: 'Node'}}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(2, rel.size());
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "X", "BLACK_LIST"));
+            Assertions.assertEquals(rel.get(1), Rel.of("X", "DS", "RELATION"));
+        }
+
+        @Test
+        void test_with_black_list_as_a_single_value_of_BlackList() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {nodes: {blackList: 'BlackList'}}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(4, rel.size());
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "B", "RELATION"));
+            Assertions.assertEquals(rel.get(1), Rel.of("B", "G", "RELATION"));
+            Assertions.assertEquals(rel.get(2), Rel.of("G", "H", "RELATION"));
+            Assertions.assertEquals(rel.get(3), Rel.of("H", "DS", "RELATION"));
+        }
+
+        @Test
+        void test_with_black_list_as_a_list_with_Node_Label() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {nodes: {blackList: ['Node', 'Other']}}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(2, rel.size());
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "X", "BLACK_LIST"));
+            Assertions.assertEquals(rel.get(1), Rel.of("X", "DS", "RELATION"));
+        }
+    }
+
+    @DisplayName("Test Relationship White List Scenarios")
+    @Nested
+    class TestRelationshipWithListScenarios {
+        @Test
+        void test_with_black_list_as_a_single_value_of_RELATION() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {relationships: {whiteList: 'BLACK_LIST'}}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(2, rel.size());
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "X", "BLACK_LIST"));
+            Assertions.assertEquals(rel.get(1), Rel.of("X", "DS", "RELATION"));
+        }
+
+        @Test
+        void test_with_black_list_as_a_single_value_of_BLACK_LIST() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {relationships: {whiteList: 'RELATION'}}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(4, rel.size());
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "B", "RELATION"));
+            Assertions.assertEquals(rel.get(1), Rel.of("B", "G", "RELATION"));
+            Assertions.assertEquals(rel.get(2), Rel.of("G", "H", "RELATION"));
+            Assertions.assertEquals(rel.get(3), Rel.of("H", "DS", "RELATION"));
+        }
+
+        @Test
+        void test_with_black_list_as_a_list_with_BLACK_LIST() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {relationships: {whiteList: ['RELATION', 'OTHER']}}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(4, rel.size());
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "B", "RELATION"));
+            Assertions.assertEquals(rel.get(1), Rel.of("B", "G", "RELATION"));
+            Assertions.assertEquals(rel.get(2), Rel.of("G", "H", "RELATION"));
+            Assertions.assertEquals(rel.get(3), Rel.of("H", "DS", "RELATION"));
+        }
+    }
+
+    @DisplayName("Test Relationship Black List Scenarios")
+    @Nested
+    class TestRelationshipBlackListScenarios {
+        @Test
+        void test_with_black_list_as_a_single_value_of_RELATION() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {relationships: {blackList: 'RELATION'}}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(2, rel.size());
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "X", "BLACK_LIST"));
+            Assertions.assertEquals(rel.get(1), Rel.of("X", "DS", "RELATION"));
+        }
+
+        @Test
+        void test_with_black_list_as_a_single_value_of_BLACK_LIST() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {relationships: {blackList: 'BLACK_LIST'}}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(4, rel.size());
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "B", "RELATION"));
+            Assertions.assertEquals(rel.get(1), Rel.of("B", "G", "RELATION"));
+            Assertions.assertEquals(rel.get(2), Rel.of("G", "H", "RELATION"));
+            Assertions.assertEquals(rel.get(3), Rel.of("H", "DS", "RELATION"));
+        }
+
+        @Test
+        void test_with_black_list_as_a_list_with_BLACK_LIST() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {relationships: {blackList: ['BLACK_LIST', 'OTHER']}}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(4, rel.size());
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "B", "RELATION"));
+            Assertions.assertEquals(rel.get(1), Rel.of("B", "G", "RELATION"));
+            Assertions.assertEquals(rel.get(2), Rel.of("G", "H", "RELATION"));
+            Assertions.assertEquals(rel.get(3), Rel.of("H", "DS", "RELATION"));
+        }
+    }
+
+    @DisplayName("Test Mixed List Scenarios")
+    @Nested
+    class TestMixedListScenarios {
+        @Test
+        void test_with_white_lists() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {nodes: {whiteList: 'Node', blackList: 'BlackList'}, relationships: {whiteList: 'RELATION', blackList: 'BLACK_LIST'}}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(4, rel.size());
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "B", "RELATION"));
+            Assertions.assertEquals(rel.get(1), Rel.of("B", "G", "RELATION"));
+            Assertions.assertEquals(rel.get(2), Rel.of("G", "H", "RELATION"));
+            Assertions.assertEquals(rel.get(3), Rel.of("H", "DS", "RELATION"));
+        }
+
+        @Test
+        void test_with_black_lists() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {nodes: {blackList: 'BlackList'}, relationships: {blackList: 'BLACK_LIST'}}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(4, rel.size());
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "B", "RELATION"));
+            Assertions.assertEquals(rel.get(1), Rel.of("B", "G", "RELATION"));
+            Assertions.assertEquals(rel.get(2), Rel.of("G", "H", "RELATION"));
+            Assertions.assertEquals(rel.get(3), Rel.of("H", "DS", "RELATION"));
+        }
+    }
+
+    @DisplayName("Test Max Depth Scenarios")
+    @Nested
+    class TestMaxDepthScenarios {
+        @Test
+        void test_with_a_max_depth_greater_than_the_path_length_so_no_truncating() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {maxDepth: 5, relationships: {whiteList: 'RELATION'}}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(4, rel.size());
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "B", "RELATION"));
+            Assertions.assertEquals(rel.get(1), Rel.of("B", "G", "RELATION"));
+            Assertions.assertEquals(rel.get(2), Rel.of("G", "H", "RELATION"));
+            Assertions.assertEquals(rel.get(3), Rel.of("H", "DS", "RELATION"));
+        }
+
+        @Test
+        void test_with_a_max_depth_equal_to_the_path_length_so_no_truncating() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {maxDepth: 4, relationships: {whiteList: 'RELATION'}}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(4, rel.size());
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "B", "RELATION"));
+            Assertions.assertEquals(rel.get(1), Rel.of("B", "G", "RELATION"));
+            Assertions.assertEquals(rel.get(2), Rel.of("G", "H", "RELATION"));
+            Assertions.assertEquals(rel.get(3), Rel.of("H", "DS", "RELATION"));
+        }
+
+        @Test
+        void test_with_a_max_depth_less_than_the_path_length_so_no_truncating() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {maxDepth: 3, relationships: {whiteList: 'RELATION'}}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(0, result.get("nodes").asMap().size());
+            Assertions.assertEquals(0, result.get("relationships").asList().size());
         }
     }
 
@@ -173,3 +423,19 @@ class AdvancedCustomProcedureTest {
         }
     }
 }
+
+
+//    @Test
+//    void test_with_max_depth_equal_to_0_should_return_empty_list_and_map() {
+//        String cypher = "match (a:External {name: 'A'}) " +
+//                "match (ds:Node {name:'DS'}) " +
+//                "call custom.advancedTraverseGraph(a, ds, 'sens_value', {maxDepth: 0}) yield relationships, nodes " +
+//                "return relationships, nodes ";
+//
+//        Record result = getCypherResults(cypher);
+//        Map<String, Node> nodes = getNodeMap(result);
+//        List<Relationship> relationships = getRelationshipList(result);
+//
+//        Assertions.assertEquals(0, nodes.size());
+//        Assertions.assertEquals(0, relationships.size());
+//    }

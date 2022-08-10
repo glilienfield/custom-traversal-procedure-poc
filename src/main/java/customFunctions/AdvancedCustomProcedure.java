@@ -37,7 +37,7 @@ public class AdvancedCustomProcedure {
         Map<String, Node> mapOfNodes = new HashMap<>();
         mapOfNodes.put(String.valueOf(rootNode.getId()), rootNode);
 
-        processNode(rootNode, terminalNode, prop, listOfRelationships, mapOfNodes, maxDepth, nodeWhiteList, nodeBlackList, relationshipWhiteList, relationshipBlackList, 0);
+        processNode(rootNode, terminalNode, prop, listOfRelationships, mapOfNodes, maxDepth, nodeWhiteList, nodeBlackList, relationshipWhiteList, relationshipBlackList, 1);
 
         return Stream.of(TraversalResult.of(listOfRelationships, mapOfNodes));
     }
@@ -66,13 +66,13 @@ public class AdvancedCustomProcedure {
         Iterable<Relationship> relationships = rootNode.getRelationships(Direction.OUTGOING);
         for (Relationship relationship : relationships) {
             Node childNode = relationship.getOtherNode(rootNode);
-            List<String> nodeLabels = StreamSupport.stream(childNode.getLabels().spliterator(), false).map(Label::name).collect(Collectors.toList());
-            String relType = relationship.getType().name();
-            if ((relationshipWhiteList.isEmpty() || relationshipWhiteList.contains(relType))
-                    && (relationshipBlackList.isEmpty() || !relationshipBlackList.contains(relType))
-                    && (nodeWhiteList.isEmpty() || nodeLabels.stream().anyMatch(nodeWhiteList::contains))
-                    && (nodeBlackList.isEmpty() || nodeLabels.stream().noneMatch(nodeBlackList::contains))) {
-                if (childNode.getId() != terminalNode.getId()) {
+            if (childNode.getId() != terminalNode.getId()) {
+                List<String> nodeLabels = StreamSupport.stream(childNode.getLabels().spliterator(), false).map(Label::name).collect(Collectors.toList());
+                String relType = relationship.getType().name();
+                if ((relationshipWhiteList.isEmpty() || relationshipWhiteList.contains(relType))
+                        && (relationshipBlackList.isEmpty() || !relationshipBlackList.contains(relType))
+                        && (nodeWhiteList.isEmpty() || nodeLabels.stream().anyMatch(nodeWhiteList::contains))
+                        && (nodeBlackList.isEmpty() || nodeLabels.stream().noneMatch(nodeBlackList::contains))) {
                     if (childNode.hasProperty(property)) {
                         Long propertyValue = (Long) childNode.getProperty(property);
                         if (propertyValue > currentMaxValue) {
@@ -82,12 +82,12 @@ public class AdvancedCustomProcedure {
                             nodeFound = true;
                         }
                     }
-                } else {
-                    listOfRelationships.add(relationship);
-                    mapOfNodes.put(String.valueOf(terminalNode.getId()), terminalNode);
-                    terminated = true;
-                    break;
                 }
+            } else {
+                listOfRelationships.add(relationship);
+                mapOfNodes.put(String.valueOf(terminalNode.getId()), terminalNode);
+                terminated = true;
+                break;
             }
         }
         if (nodeFound && !terminated) {
@@ -105,7 +105,7 @@ public class AdvancedCustomProcedure {
                 if (x instanceof List) {
                     return (List<String>) x;
                 } else {
-                    return Arrays.asList((String) x);
+                    return Collections.singletonList((String) x);
                 }
             } else {
                 return Collections.emptyList();
