@@ -1,4 +1,5 @@
-import customFunctions.BasicCustomProcedure;
+package customFunctions;
+
 import org.junit.jupiter.api.*;
 import org.neo4j.driver.*;
 import org.neo4j.driver.types.Node;
@@ -62,7 +63,7 @@ class BasicCustomProcedureTests {
     }
 
     @Test
-    @DisplayName("Test TraverseGraph Scenarios")
+    @DisplayName("Test Basic Traverse Graph Algorithm Scenarios")
     void test() {
         String cypher = "match (a:External {name: 'A'}) " +
                 "call custom.traverseGraph(a, 'sens_value') yield nodes " +

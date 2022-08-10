@@ -25,8 +25,9 @@ public class AdvancedCustomProcedure {
         Objects.requireNonNull(rootNode);
         Objects.requireNonNull(terminalNode);
         Objects.requireNonNull(prop);
+        Objects.requireNonNull(config);
 
-        Long maxDepth = (config != null && config.containsKey("maxDepth")) ? (Long) config.get("maxDepth") : Long.MAX_VALUE;
+        long maxDepth = (!config.isEmpty() && config.containsKey("maxDepth")) ? (long) config.get("maxDepth") : Long.MAX_VALUE;
         List<String> nodeWhiteList = extractListFromConfig(config, "nodes", "whiteList");
         List<String> nodeBlackList = extractListFromConfig(config, "nodes", "blackList");
         List<String> relationshipWhiteList = extractListFromConfig(config, "relationships", "whiteList");
@@ -97,7 +98,7 @@ public class AdvancedCustomProcedure {
     }
 
     private List<String> extractListFromConfig(Map<String, Object> config, String type, String list) {
-        if (config != null && config.containsKey(type)) {
+        if (!config.isEmpty() && config.containsKey(type)) {
             Map<String, Object> map = (Map<String, Object>) config.get(type);
             if (map.containsKey(list)) {
                 Object x = map.get(list);

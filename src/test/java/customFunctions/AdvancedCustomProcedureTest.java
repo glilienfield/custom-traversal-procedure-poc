@@ -1,15 +1,21 @@
 package customFunctions;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.neo4j.driver.*;
+import org.neo4j.driver.types.Node;
+import org.neo4j.driver.types.Relationship;
 import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilders;
+import utilities.Rel;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 class AdvancedCustomProcedureTest {
     static Driver driver;
+
 
     @BeforeAll
     static void setup_db() {
@@ -62,23 +68,102 @@ class AdvancedCustomProcedureTest {
         }
     }
 
-    @Test
-    @DisplayName("Test TraverseGraph Scenarios")
-    void test() {
-        String cypher = "match (a:External {name: 'A'}) " +
-                "match (ds:Node {name:'DS'}) " +
-                "call custom.advancedTraverseGraph(a, ds, 'sens_value', {maxDepth: 10, nodes:{whiteList: ['Node', 'BlackList']}, relationships: {blackList: ['AAA']}}) yield relationships, nodes " +
-                "return relationships, nodes ";
-        Record result = getCypherResults(cypher);
-        result.get("relationships").asList(Value::asRelationship).stream().forEach(
-                r-> System.out.println(String.format("id: %s, type: %s, start node id: %s, end node id: %s", r.id(), r.type(), r.startNodeId(), r.endNodeId()))
-        );
-        result.get("nodes").asMap(Value::asNode).forEach(
-                (k,v)-> System.out.println(String.format("node id: %s, labels: %s, name: %s, sens_value: %s", k, v.labels(), v.get("name"), v.get("sens_value")))
-        );
-//        Assertions.assertIterableEquals(Arrays.asList(1, 2, 3), listOfIds);
-//        System.out.println(listOfIds);
-//        System.out.println(mapOfNodes);
+    @DisplayName("Test Advanced Traverse Graph Algorithm Scenarios")
+    @Nested
+    class NoListScenarios {
+        @Test
+        void test_list_of_nodes_is_correct() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            Map<String, Node> nodes = getNodeMap(result);
+
+            Assertions.assertEquals(3, nodes.size());
+            Assertions.assertIterableEquals(Arrays.asList("A", "DS", "X"), nodes.values().stream().map(v -> v.get("name").asString()).sorted().collect(Collectors.toList()));
+        }
+
+        @Test
+        void test_list_of_relationships_is_correct() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "X", "BLACK_LIST"));
+            Assertions.assertEquals(rel.get(1), Rel.of("X", "DS", "RELATION"));
+        }
+
+        @Test
+        void test_with_max_depth_equal_to_0_should_return_empty_list_and_map() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {maxDepth: 0}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            Map<String, Node> nodes = getNodeMap(result);
+            List<Relationship> relationships = getRelationshipList(result);
+
+            Assertions.assertEquals(0, nodes.size());
+            Assertions.assertEquals(0, relationships.size());
+        }
+    }
+
+    @DisplayName("Test White List Scenarios")
+    @Nested
+    class TestWhiteListScenarios {
+        @Test
+        void test_with_white_list_as_single_value_of_Node() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {nodes: {whiteList: 'Node'}}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            List<Rel> rel = getResult(result);
+
+            Assertions.assertEquals(4, rel.size());
+            Assertions.assertEquals(rel.get(0), Rel.of("A", "B", "RELATION"));
+            Assertions.assertEquals(rel.get(1), Rel.of("B", "G", "RELATION"));
+            Assertions.assertEquals(rel.get(2), Rel.of("G", "H", "RELATION"));
+            Assertions.assertEquals(rel.get(3), Rel.of("H", "DS", "RELATION"));
+        }
+
+        @Test
+        void test_with_max_depth_equal_to_0_should_return_empty_list_and_map() {
+            String cypher = "match (a:External {name: 'A'}) " +
+                    "match (ds:Node {name:'DS'}) " +
+                    "call custom.advancedTraverseGraph(a, ds, 'sens_value', {maxDepth: 0}) yield relationships, nodes " +
+                    "return relationships, nodes ";
+
+            Record result = getCypherResults(cypher);
+            Map<String, Node> nodes = getNodeMap(result);
+            List<Relationship> relationships = getRelationshipList(result);
+
+            Assertions.assertEquals(0, nodes.size());
+            Assertions.assertEquals(0, relationships.size());
+        }
+    }
+
+    private List<Relationship> getRelationshipList(Record record) {
+        return record.get("relationships").asList(Value::asRelationship);
+    }
+
+    private Map<String, Node> getNodeMap(Record record) {
+        return record.get("nodes").asMap(Value::asNode);
+
+    }
+
+    private List<Rel> getResult(Record record) {
+        Map<String, Node> nodes = getNodeMap(record);
+        List<Relationship> relationships = getRelationshipList(record);
+        return Rel.merge(nodes, relationships);
     }
 
     private Record getCypherResults(String cypher) {
